@@ -1,8 +1,13 @@
+package controller;
+
+import domain.Production;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class Grammar {
     ArrayList<String> terminals = new ArrayList<>();
@@ -56,11 +61,42 @@ public class Grammar {
             }
         });
     }
+
+    public String[][] parsingTree(){
+        String[][] tree = new String[terminals.size()][terminals.size() + nonTerminals.size()];
+        //add terminals to the first row
+        for(int i = 0; i < terminals.size(); i++){
+            tree[0][i] = terminals.get(i);
+        }
+        //add terminals and non terminals to the list
+        for(int i = 0; i < terminals.size() + nonTerminals.size(); i++){
+            if(i < nonTerminals.size()){
+                tree[i][0] = nonTerminals.get(i);
+            }else{
+                tree[i][0] = terminals.get(i);
+            }
+        }
+
+        return tree;
+    }
+    public boolean hasConflict(){
+        return Parser.conflictsExist(productions);
+    }
+
+    public HashMap<String, ArrayList<String>> firstFlatten(){
+        return Parser.firstFlatten(productions);
+    }
+    public HashMap<String, ArrayList<String>> followFlatten(){
+        return Parser.followFlatten(productions);
+    }
+
     public Grammar(String fileName) {
         this.readGrammarFromFile(fileName);
-        printSetOfTerminals();
-        printSetOfNonTerminals();
-        printSetOfProductions();
-        printSetOfProductionsNonTerminal("T");
+//        printSetOfTerminals();
+//        printSetOfNonTerminals();
+//        printSetOfProductions();
+//        printSetOfProductionsNonTerminal("T");
+        System.out.println(firstFlatten());
+        System.out.println(followFlatten());
     }
 }

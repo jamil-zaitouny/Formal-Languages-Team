@@ -1,7 +1,9 @@
+package domain;
+
 public class Production {
-    String production;
-    String leftHandSide;
-    String[] rightHandSide;
+    public String production;
+    public String leftHandSide;
+    public String[] rightHandSide;
 
     @Override
     public String toString() {
