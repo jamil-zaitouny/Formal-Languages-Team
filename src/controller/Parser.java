@@ -56,7 +56,6 @@ public class Parser {
         Set<String> listOfKeys = new HashSet<>(first.keySet());
         int counter = 0;
         do{
-            System.out.println("F" + counter);
             for(String key: listOfKeys){
                 int size = first.get(key).size();
                 for(int i = 0; i < size; i++){
@@ -69,7 +68,6 @@ public class Parser {
                     }
                 }
             }
-            counter++;
         }while(!isFlat.get());
         return first;
     }
@@ -108,19 +106,17 @@ public class Parser {
         boolean isFlat;
         do{
             isFlat = true;
-            for(Map.Entry<String, ArrayList<String>> entry: follow.entrySet()){
-                ArrayList<String> followList = follow.get(entry.getKey());
-                for(String token: entry.getValue()){
-                    if(Character.isUpperCase(token.charAt(0))){
-                        if(firstFlatten.get(token).contains("e")){
-                            String leftHandSide = Parser.getLeftHandSide(entry.getKey(), token, productions);
-                            followList.addAll(firstFlatten.get(leftHandSide));
-                            follow.remove(token);
-                            follow.replace(entry.getKey(), followList);
+            for(String key: follow.keySet()){
+                int size = follow.get(key).size();
+                for(int i = 0; i < size; i++){
+                    if(Character.isUpperCase(follow.get(key).get(i).charAt(0))){
+                        if(firstFlatten.get(follow.get(key).get(i)).contains("e")){
+                            String leftHandSide = Parser.getLeftHandSide(key, follow.get(key).get(i), productions);
+                            follow.get(key).addAll(firstFlatten.get(leftHandSide));
+                            follow.get(key).remove(follow.get(key).get(i));
                         }else{
-                            followList.addAll(follow.get(token));
-                            followList.remove(token);
-                            follow.replace(entry.getKey(), followList);
+                            follow.get(key).addAll(follow.get(follow.get(key).get(i)));
+                            follow.get(key).remove(follow.get(key).get(i));
                         }
                         isFlat = false;
                     }
