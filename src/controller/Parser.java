@@ -4,7 +4,6 @@ import domain.Production;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 public class Parser {
     public HashMap<String, ArrayList<String>> firstList;
@@ -97,16 +96,15 @@ public class Parser {
                                 break;
                             }
                             if(currentCounter == production.rightHandSide.length -1){
-                                follow.get(production.rightHandSide[i]).addAll(first.get(production.leftHandSide));
+                                follow.get(production.rightHandSide[i]).addAll(first.get(production.rightHandSide[currentCounter]));
                                 break;
                             }
                             ArrayList<String> firstOfCurrentFollow = first.get(production.rightHandSide[currentCounter]);
                             follow.get(production.rightHandSide[i]).addAll(firstOfCurrentFollow);
-                            currentCounter++;
-                            System.out.println(firstOfCurrentFollow);
                             if(!firstOfCurrentFollow.contains("é")){
                                 break;
                             }
+                            currentCounter++;
                         }
                     }
                 }
@@ -137,6 +135,10 @@ public class Parser {
                 }
             }
         }while(!isFlat);
-        return follow;
+        HashMap<String, ArrayList<String>> finalFollow = new HashMap<>();
+        for(Map.Entry<String, ArrayList<String>> entry: follow.entrySet()){
+            finalFollow.put(entry.getKey(), new ArrayList<>(new HashSet<>(entry.getValue())));
+        }
+        return finalFollow;
     }
 }
