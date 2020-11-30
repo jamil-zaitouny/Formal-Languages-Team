@@ -6,12 +6,19 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-
-//btw, you might know better, is having static methods like this a bad idea, from a design point of view?
 public class Parser {
-    //returns true if there's a first conflict or a follow conflict
+    public HashMap<String, ArrayList<String>> firstList;
+    public HashMap<String, ArrayList<String>> followList;
+    Grammar grammar;
+
+    public Parser(Grammar grammar) {
+        this.grammar = grammar;
+        this.firstList = firstFlatten(grammar.productions);
+        this.followList = followFlatten(grammar.productions);
+    }
+
     public static boolean conflictsExist(ArrayList<Production> productions) {
-        return Parser.firstConflict(productions) || Parser.followConflict(productions);
+        return Parser.firstConflict(productions);
     }
 
     public static boolean firstConflict(ArrayList<Production> productions) {
@@ -26,18 +33,19 @@ public class Parser {
         }
         return isUnique;
     }
-    public static boolean followConflict(ArrayList<Production> productions) {
-        HashMap<String, ArrayList<String>> followMap = followFlatten(productions);
-        ArrayList<HashSet<String>> uniquenessCheck = new ArrayList<>();
-        followMap.forEach((key, list) -> uniquenessCheck.add(new HashSet<>(list)));
-        boolean isUnique = true;
-        for (int i = 0; i < uniquenessCheck.size() - 1; i++) {
-            for (int j = i + 1; j < uniquenessCheck.size(); j++) {
-                isUnique = isUnique && uniquenessCheck.get(i).equals(uniquenessCheck.get(j));
-            }
-        }
-        return isUnique;
-    }
+
+//    public static boolean followConflict(ArrayList<Production> productions) {
+//        HashMap<String, ArrayList<String>> followMap = followFlatten(productions);
+//        ArrayList<HashSet<String>> uniquenessCheck = new ArrayList<>();
+//        followMap.forEach((key, list) -> uniquenessCheck.add(new HashSet<>(list)));
+//        boolean isUnique = true;
+//        for (int i = 0; i < uniquenessCheck.size() - 1; i++) {
+//            for (int j = i + 1; j < uniquenessCheck.size(); j++) {
+//                isUnique = isUnique && uniquenessCheck.get(i).equals(uniquenessCheck.get(j));
+//            }
+//        }
+//        return isUnique;
+//    }
 
     public static HashMap<String, ArrayList<String>> first(ArrayList<Production> productions) {
         HashMap<String, ArrayList<String>> first = new HashMap<>();
@@ -96,7 +104,7 @@ public class Parser {
                             follow.get(production.rightHandSide[i]).addAll(firstOfCurrentFollow);
                             currentCounter++;
                             System.out.println(firstOfCurrentFollow);
-                            if(!firstOfCurrentFollow.contains("e")){
+                            if(!firstOfCurrentFollow.contains("é")){
                                 break;
                             }
                         }
@@ -104,7 +112,7 @@ public class Parser {
                 }
             }
         }
-        follow.get("S").add("e");
+        follow.get("S").add("é");
         HashMap<String, ArrayList<String>> finalFollow = new HashMap<>();
         for(Map.Entry<String, ArrayList<String>> entry: follow.entrySet()){
             finalFollow.put(entry.getKey(), new ArrayList<>(new HashSet<>(entry.getValue())));

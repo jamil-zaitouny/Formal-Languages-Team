@@ -15,7 +15,8 @@ public class Grammar {
     ArrayList<Production> productions = new ArrayList<>();
     public void readGrammarFromFile(String fileName){
         try {
-            String[] listOfTransitions = Files.readString(Path.of(fileName)).split("\r\n");
+            //String[] listOfTransitions = Files.readString(Path.of(fileName)).split("\r\n");
+            String[] listOfTransitions = Files.readString(Path.of(fileName)).split("\n");
             String currentRead = "";
             for(String line: listOfTransitions){
                 if(line.equals("terminals")){
@@ -96,7 +97,7 @@ public class Grammar {
 //        printSetOfNonTerminals();
 //        printSetOfProductions();
 //        printSetOfProductionsNonTerminal("T");
-        System.out.println(firstFlatten());
-        System.out.println(followFlatten());
+        //System.out.println(firstFlatten());
+        //System.out.println(followFlatten());
     }
 }

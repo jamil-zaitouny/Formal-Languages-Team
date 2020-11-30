@@ -16,7 +16,7 @@ R
 I
 productions
 S -> if C then I T
-T -> e
+T -> é
 T -> else I
 C -> E R E
 E -> id
