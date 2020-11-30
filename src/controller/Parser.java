@@ -131,24 +131,4 @@ public class Parser {
         }while(!isFlat);
         return follow;
     }
-    public static String getLeftHandSide(String key, String token, ArrayList<Production> productions) {
-        String leftHandSide = "e";
-        for(Production production: productions){
-            boolean isNext = false;
-            for(String rightHandToke: production.rightHandSide){
-                if(rightHandToke.equals(key)){
-                    isNext = true;
-                    continue;
-                }if(isNext){
-                    if(rightHandToke.equals(token)){
-                        leftHandSide.equals(production.leftHandSide);
-                        break;
-                    }
-                }
-                isNext = false;
-            }
-        }
-        return leftHandSide;
-    }
-
 }
