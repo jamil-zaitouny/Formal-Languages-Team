@@ -41,6 +41,11 @@ public class Grammar {
             e.printStackTrace();
         }
     }
+
+    public boolean isNonTerminal(String string) {
+        return nonTerminals.contains(string);
+    }
+
     public void printSetOfTerminals(){
         System.out.println("Set of terminals");
         System.out.println(terminals);
@@ -80,16 +85,6 @@ public class Grammar {
 
         return tree;
     }
-    public boolean hasConflict(){
-        return Parser.conflictsExist(productions);
-    }
-
-    public HashMap<String, ArrayList<String>> firstFlatten(){
-        return Parser.firstFlatten(productions);
-    }
-    public HashMap<String, ArrayList<String>> followFlatten(){
-        return Parser.followFlatten(productions);
-    }
 
     public Grammar(String fileName) {
         this.readGrammarFromFile(fileName);
@@ -97,7 +92,5 @@ public class Grammar {
 //        printSetOfNonTerminals();
 //        printSetOfProductions();
 //        printSetOfProductionsNonTerminal("T");
-        //System.out.println(firstFlatten());
-        //System.out.println(followFlatten());
     }
 }

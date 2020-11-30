@@ -17,8 +17,8 @@ else
 <=
 ==
 !=
-RELATION -> >=
-RELATION -> >
+>=
+>
 !
 ?
 ;
@@ -150,7 +150,6 @@ SPECIAL_CHAR -> !
 SPECIAL_CHAR -> ,
 SPECIAL_CHAR -> ?
 SPECIAL_CHAR -> ;
-LETTER -> 
 DIGIT -> NON_ZERO_DIGIT
 DIGIT -> 0
 CONSTANT -> INTEGER

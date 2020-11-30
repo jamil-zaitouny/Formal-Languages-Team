@@ -12,16 +12,15 @@ public class Parser {
 
     public Parser(Grammar grammar) {
         this.grammar = grammar;
-        this.firstList = firstFlatten(grammar.productions);
-        this.followList = followFlatten(grammar.productions);
+        this.firstList = firstFlatten();
+        this.followList = followFlatten();
     }
 
-    public static boolean conflictsExist(ArrayList<Production> productions) {
-        return Parser.firstConflict(productions);
+    public boolean conflictsExist() {
+        return firstConflict();
     }
 
-    public static boolean firstConflict(ArrayList<Production> productions) {
-        HashMap<String, ArrayList<String>> firstList = firstFlatten(productions);
+    public boolean firstConflict() {
         ArrayList<HashSet<String>> uniquenessCheck = new ArrayList<>();
         firstList.forEach((key, list) -> uniquenessCheck.add(new HashSet<>(list)));
         boolean isUnique = true;
@@ -46,7 +45,8 @@ public class Parser {
 //        return isUnique;
 //    }
 
-    public static HashMap<String, ArrayList<String>> first(ArrayList<Production> productions) {
+    public HashMap<String, ArrayList<String>> first() {
+        ArrayList<Production> productions = grammar.productions;
         HashMap<String, ArrayList<String>> first = new HashMap<>();
         for(Production production: productions){
             first.put(production.leftHandSide, new ArrayList<>());
@@ -57,9 +57,9 @@ public class Parser {
         return first;
     }
 
-    public static HashMap<String, ArrayList<String>> firstFlatten(ArrayList<Production> productions) {
+    public HashMap<String, ArrayList<String>> firstFlatten() {
         AtomicBoolean isFlat = new AtomicBoolean(false);
-        HashMap<String, ArrayList<String>> first = Parser.first(productions);
+        HashMap<String, ArrayList<String>> first = first();
         Set<String> listOfKeys = new HashSet<>(first.keySet());
         int counter = 0;
         do{
@@ -67,7 +67,7 @@ public class Parser {
                 int size = first.get(key).size();
                 for(int i = 0; i < size; i++){
                     isFlat.set(true);
-                    if(Character.isUpperCase(first.get(key).get(i).charAt(0))){
+                    if(grammar.isNonTerminal(first.get(key).get(i))){
                         isFlat.set(false);
                         ArrayList<String> terminals = first.get(first.get(key).get(i));
                         first.get(key).addAll(terminals);
@@ -78,20 +78,21 @@ public class Parser {
         }while(!isFlat.get());
         return first;
     }
-    public static HashMap<String, ArrayList<String>> follow(ArrayList<Production> productions) {
+    public HashMap<String, ArrayList<String>> follow() {
+        ArrayList<Production> productions = grammar.productions;
         HashMap<String, ArrayList<String>> follow = new HashMap<>();
-        HashMap<String, ArrayList<String>> first = firstFlatten(productions);
+        HashMap<String, ArrayList<String>> first = firstFlatten();
         productions.forEach(production -> follow.put(production.leftHandSide, new ArrayList<>()));
         for(Production production: productions){
             for(int i = 0; i <  production.rightHandSide.length; i++){
-                if(Character.isUpperCase(production.rightHandSide[i].charAt(0))){
+                if(grammar.isNonTerminal(production.rightHandSide[i])){
                     if(i == production.rightHandSide.length-1){
                         follow.get(production.rightHandSide[i]).add(production.leftHandSide);
                     }else{
                         int currentCounter = 1 + i;
                         String currentNext = production.rightHandSide[currentCounter];
                         while(currentCounter < production.rightHandSide.length){
-                            if(!Character.isUpperCase(production.rightHandSide[currentCounter].charAt(0))){
+                            if(!grammar.isNonTerminal(production.rightHandSide[currentCounter])){
                                 follow.get(production.rightHandSide[i]).add(production.rightHandSide[currentCounter]);
                                 break;
                             }
@@ -118,15 +119,15 @@ public class Parser {
         return finalFollow;
     }
 
-    public static HashMap<String, ArrayList<String>> followFlatten(ArrayList<Production> productions) {
-        HashMap<String, ArrayList<String>> follow = Parser.follow(productions);
+    public HashMap<String, ArrayList<String>> followFlatten() {
+        HashMap<String, ArrayList<String>> follow = follow();
         boolean isFlat = false;
         do{
             isFlat = true;
             for(String key: follow.keySet()){
                 int size = follow.get(key).size();
                 for(int i = 0; i < size; i++){
-                   if(Character.isUpperCase(follow.get(key).get(i).charAt(0))){
+                   if(grammar.isNonTerminal(follow.get(key).get(i))){
                        isFlat = false;
                        String tokenToReplaceWith = follow.get(key).get(i);
                        follow.get(key).remove(tokenToReplaceWith);
