@@ -4,6 +4,7 @@ import domain.Production;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 
 //btw, you might know better, is having static methods like this a bad idea, from a design point of view?
@@ -52,23 +53,26 @@ public class Parser {
     public static HashMap<String, ArrayList<String>> firstFlatten(ArrayList<Production> productions) {
         AtomicBoolean isFlat = new AtomicBoolean(false);
         HashMap<String, ArrayList<String>> first = Parser.first(productions);
-        System.out.println(first);
-        do {
-            isFlat.set(true);
-            for (Map.Entry<String, ArrayList<String>> entry : first.entrySet()) {
-                entry.getValue().forEach(token -> {
-                    if (Character.isUpperCase(token.charAt(0))) {
+        Set<String> listOfKeys = new HashSet<>(first.keySet());
+        int counter = 0;
+        do{
+            System.out.println("F" + counter);
+            for(String key: listOfKeys){
+                int size = first.get(key).size();
+                for(int i = 0; i < size; i++){
+                    isFlat.set(true);
+                    if(Character.isUpperCase(first.get(key).get(i).charAt(0))){
                         isFlat.set(false);
-                        ArrayList<String> itemsToAdd = first.get(token);
-                        first.get(entry.getKey()).remove(token);
-                        first.get(entry.getKey()).addAll(itemsToAdd);
+                        ArrayList<String> terminals = first.get(first.get(key).get(i));
+                        first.get(key).addAll(terminals);
+                        first.get(key).remove(first.get(key).get(i));
                     }
-                });
+                }
             }
-        } while (!isFlat.get());
+            counter++;
+        }while(!isFlat.get());
         return first;
     }
-
     public static HashMap<String, ArrayList<String>> follow(ArrayList<Production> productions) {
         HashMap<String, ArrayList<String>> follow = new HashMap<>();
         for (Production production : productions) {
