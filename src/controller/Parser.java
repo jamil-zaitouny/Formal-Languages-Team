@@ -4,7 +4,6 @@ import domain.Production;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 
 //btw, you might know better, is having static methods like this a bad idea, from a design point of view?
@@ -79,10 +78,10 @@ public class Parser {
         HashMap<String, ArrayList<String>> first = first(productions);
         boolean isNext = false;
         for (Production production : productions) {
-            ArrayList<String> followList = follow.get(production.leftHandSide);
+            ArrayList<String> followSet = follow.get(production.leftHandSide);
             for (Map.Entry<String, ArrayList<String>> entry : first.entrySet()) {
                 if(entry.getKey().equals(production.leftHandSide)){
-                    followList.add(entry.getValue().get(entry.getValue().size() - 1));
+                    followSet.add(entry.getValue().get(entry.getValue().size() - 1));
                 }
                 for (String token : entry.getValue()) {
                     if (token.equals(production.leftHandSide)) {
@@ -90,14 +89,18 @@ public class Parser {
                         continue;
                     }
                     if (isNext) {
-                        followList.add(token);
-                        follow.replace(production.leftHandSide, followList);
+                        followSet.add(token);
+                        follow.replace(production.leftHandSide, followSet);
                     }
                     isNext = false;
                 }
             }
         }
-        return follow;
+        HashMap<String, ArrayList<String>> finalFollow = new HashMap<>();
+        for(Map.Entry<String, ArrayList<String>> entry: follow.entrySet()){
+            finalFollow.put(entry.getKey(), new ArrayList<>(new HashSet<>(entry.getValue())));
+        }
+        return finalFollow;
     }
 
     public static HashMap<String, ArrayList<String>> followFlatten(ArrayList<Production> productions) {
