@@ -4,6 +4,7 @@ import domain.Production;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 
 //btw, you might know better, is having static methods like this a bad idea, from a design point of view?
@@ -72,30 +73,38 @@ public class Parser {
     }
     public static HashMap<String, ArrayList<String>> follow(ArrayList<Production> productions) {
         HashMap<String, ArrayList<String>> follow = new HashMap<>();
-        for (Production production : productions) {
-            follow.put(production.leftHandSide, new ArrayList<>());
-        }
-        HashMap<String, ArrayList<String>> first = first(productions);
-        boolean isNext = false;
-        for (Production production : productions) {
-            ArrayList<String> followSet = follow.get(production.leftHandSide);
-            for (Map.Entry<String, ArrayList<String>> entry : first.entrySet()) {
-                if(entry.getKey().equals(production.leftHandSide)){
-                    followSet.add(entry.getValue().get(entry.getValue().size() - 1));
-                }
-                for (String token : entry.getValue()) {
-                    if (token.equals(production.leftHandSide)) {
-                        isNext = true;
-                        continue;
+        HashMap<String, ArrayList<String>> first = firstFlatten(productions);
+        productions.forEach(production -> follow.put(production.leftHandSide, new ArrayList<>()));
+        for(Production production: productions){
+            for(int i = 0; i <  production.rightHandSide.length; i++){
+                if(Character.isUpperCase(production.rightHandSide[i].charAt(0))){
+                    if(i == production.rightHandSide.length-1){
+                        follow.get(production.rightHandSide[i]).add(production.leftHandSide);
+                    }else{
+                        int currentCounter = 1 + i;
+                        String currentNext = production.rightHandSide[currentCounter];
+                        while(currentCounter < production.rightHandSide.length){
+                            if(!Character.isUpperCase(production.rightHandSide[currentCounter].charAt(0))){
+                                follow.get(production.rightHandSide[i]).add(production.rightHandSide[currentCounter]);
+                                break;
+                            }
+                            if(currentCounter == production.rightHandSide.length -1){
+                                follow.get(production.rightHandSide[i]).addAll(first.get(production.leftHandSide));
+                                break;
+                            }
+                            ArrayList<String> firstOfCurrentFollow = first.get(production.rightHandSide[currentCounter]);
+                            follow.get(production.rightHandSide[i]).addAll(firstOfCurrentFollow);
+                            currentCounter++;
+                            System.out.println(firstOfCurrentFollow);
+                            if(!firstOfCurrentFollow.contains("e")){
+                                break;
+                            }
+                        }
                     }
-                    if (isNext) {
-                        followSet.add(token);
-                        follow.replace(production.leftHandSide, followSet);
-                    }
-                    isNext = false;
                 }
             }
         }
+        follow.get("S").add("e");
         HashMap<String, ArrayList<String>> finalFollow = new HashMap<>();
         for(Map.Entry<String, ArrayList<String>> entry: follow.entrySet()){
             finalFollow.put(entry.getKey(), new ArrayList<>(new HashSet<>(entry.getValue())));
@@ -105,30 +114,23 @@ public class Parser {
 
     public static HashMap<String, ArrayList<String>> followFlatten(ArrayList<Production> productions) {
         HashMap<String, ArrayList<String>> follow = Parser.follow(productions);
-        HashMap<String, ArrayList<String>> firstFlatten = Parser.firstFlatten(productions);
-        boolean isFlat;
+        boolean isFlat = false;
         do{
             isFlat = true;
             for(String key: follow.keySet()){
                 int size = follow.get(key).size();
                 for(int i = 0; i < size; i++){
-                    if(Character.isUpperCase(follow.get(key).get(i).charAt(0))){
-                        if(firstFlatten.get(follow.get(key).get(i)).contains("e")){
-                            String leftHandSide = Parser.getLeftHandSide(key, follow.get(key).get(i), productions);
-                            follow.get(key).addAll(firstFlatten.get(leftHandSide));
-                            follow.get(key).remove(follow.get(key).get(i));
-                        }else{
-                            follow.get(key).addAll(follow.get(follow.get(key).get(i)));
-                            follow.get(key).remove(follow.get(key).get(i));
-                        }
-                        isFlat = false;
-                    }
+                   if(Character.isUpperCase(follow.get(key).get(i).charAt(0))){
+                       isFlat = false;
+                       String tokenToReplaceWith = follow.get(key).get(i);
+                       follow.get(key).remove(tokenToReplaceWith);
+                       follow.get(key).addAll(follow.get(tokenToReplaceWith));
+                   }
                 }
             }
         }while(!isFlat);
         return follow;
     }
-
     public static String getLeftHandSide(String key, String token, ArrayList<Production> productions) {
         String leftHandSide = "e";
         for(Production production: productions){
