@@ -20,6 +20,10 @@ public class Parser {
         return firstConflict();
     }
 
+    public Grammar getGrammar() {
+        return grammar;
+    }
+
     public boolean firstConflict() {
         ArrayList<HashSet<String>> uniquenessCheck = new ArrayList<>();
         firstList.forEach((key, list) -> uniquenessCheck.add(new HashSet<>(list)));

@@ -42,6 +42,44 @@ public class Grammar {
         }
     }
 
+    public ArrayList<String> getTerminals() {
+        return terminals;
+    }
+
+    public void setTerminals(ArrayList<String> terminals) {
+        this.terminals = terminals;
+    }
+
+    public ArrayList<String> getNonTerminals() {
+        return nonTerminals;
+    }
+
+    public void setNonTerminals(ArrayList<String> nonTerminals) {
+        this.nonTerminals = nonTerminals;
+    }
+
+    public ArrayList<Production> getProductions(String nonTerminal) {
+        ArrayList<Production> selectedProductions = new ArrayList<>();
+        productions.forEach(production -> {
+            if(nonTerminal.equals(production.leftHandSide)) {
+                selectedProductions.add(production);
+            }
+        });
+        return selectedProductions;
+    }
+
+    public int nonTerminalId(String nonTerminal) {
+        return nonTerminals.indexOf(nonTerminal);
+    }
+
+    public int terminalId(String terminal) {
+        return nonTerminals.indexOf(terminal);
+    }
+
+    public int productionId(Production production) {
+        return productions.indexOf(production);
+    }
+
     public boolean isNonTerminal(String string) {
         return nonTerminals.contains(string);
     }
