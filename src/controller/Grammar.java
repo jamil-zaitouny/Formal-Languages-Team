@@ -68,12 +68,16 @@ public class Grammar {
         return selectedProductions;
     }
 
+    public Production getProductionById(Integer id) {
+        return productions.get(id);
+    }
+
     public int nonTerminalId(String nonTerminal) {
         return nonTerminals.indexOf(nonTerminal);
     }
 
     public int terminalId(String terminal) {
-        return nonTerminals.indexOf(terminal);
+        return terminals.indexOf(terminal);
     }
 
     public int productionId(Production production) {

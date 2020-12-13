@@ -1,7 +1,11 @@
 package controller;
 
+import domain.ParsingTable;
 import domain.Production;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -16,38 +20,38 @@ public class Parser {
         this.followList = followFlatten();
     }
 
-    public boolean conflictsExist() {
-        return firstConflict();
-    }
-
     public Grammar getGrammar() {
         return grammar;
     }
 
-    public boolean firstConflict() {
-        ArrayList<HashSet<String>> uniquenessCheck = new ArrayList<>();
-        firstList.forEach((key, list) -> uniquenessCheck.add(new HashSet<>(list)));
-        boolean isUnique = true;
-        for (int i = 0; i < uniquenessCheck.size() - 1; i++) {
-            for (int j = i + 1; j < uniquenessCheck.size(); j++) {
-                isUnique = isUnique && uniquenessCheck.get(i).equals(uniquenessCheck.get(j));
+    public void parse(String inputFilename, String outputFilename) {
+        try {
+            ParsingTable parsingTable = new ParsingTable(this);
+            ArrayList<String> conflict = parsingTable.conflictSymbols();
+            if (conflict != null) {
+                System.out.println("There is a conflict in the parsing table at cell " + conflict);
             }
+            else {
+                String[] listOfLines = Files.readString(Path.of(inputFilename)).split("\n");
+                ArrayList<String> tokens = new ArrayList<>();
+                for (String line: listOfLines) {
+                    line = line.replace("\t", " ");
+                    String[] words = line.split("\\s+");
+                    for (String token: words) {
+                        tokens.add(token);
+                    }
+                }
+                Stack<String> alfa = new Stack<>();
+                alfa.push("$");
+                for (int i=tokens.size() - 1; i>=0; i--) {
+                    alfa.push(tokens.get(i));
+                }
+                parsingTable.parseWithTable(alfa, outputFilename);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return isUnique;
     }
-
-//    public static boolean followConflict(ArrayList<Production> productions) {
-//        HashMap<String, ArrayList<String>> followMap = followFlatten(productions);
-//        ArrayList<HashSet<String>> uniquenessCheck = new ArrayList<>();
-//        followMap.forEach((key, list) -> uniquenessCheck.add(new HashSet<>(list)));
-//        boolean isUnique = true;
-//        for (int i = 0; i < uniquenessCheck.size() - 1; i++) {
-//            for (int j = i + 1; j < uniquenessCheck.size(); j++) {
-//                isUnique = isUnique && uniquenessCheck.get(i).equals(uniquenessCheck.get(j));
-//            }
-//        }
-//        return isUnique;
-//    }
 
     public HashMap<String, ArrayList<String>> first() {
         ArrayList<Production> productions = grammar.productions;
