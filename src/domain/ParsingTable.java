@@ -2,9 +2,6 @@ package domain;
 
 import controller.Grammar;
 import controller.Parser;
-
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Stack;
@@ -86,7 +83,6 @@ public class ParsingTable {
                         Production productionInTable = firstOfProduction("é", production);
                         if (productionInTable != null) {
                             ArrayList<String> listOfFollows = parser.followList.get(nonTerminal);
-                            //System.out.println(listOfFollows);
                             for (String follow: listOfFollows) {
                                 if (follow.equals("é")) {
                                     table[grammar.nonTerminalId(nonTerminal)][grammar.getTerminals().size()] = String.valueOf(grammar.productionId(productionInTable));
@@ -114,6 +110,7 @@ public class ParsingTable {
         ArrayList<Integer> pi = new ArrayList<>();
         String result = null;
         boolean go = true;
+        ArrayList<String> parsedTerminals = new ArrayList<>();
         while (go) {
             int nonTerminalId = grammar.nonTerminalId(beta.peek());
             int terminalId = grammar.terminalId(alfa.peek());
@@ -141,7 +138,7 @@ public class ParsingTable {
                     else {
                         if (beta.peek().equals(alfa.peek()) && !beta.peek().equals("$")) {
                             String node = beta.pop();
-                            alfa.pop();
+                            parsedTerminals.add(alfa.pop());
                             parserOutput.addNode(node, fatherStack.pop());
                         } else {
                             if (beta.peek().equals("$") && alfa.peek().equals("$")) {
@@ -162,7 +159,14 @@ public class ParsingTable {
             parserOutput.tableToFile(filename);
         }
         else {
+            parserOutput.reorderTree();
+            parserOutput.printTable();
             System.out.println("There was an error.");
+            String parsedString = "";
+            for (String terminal: parsedTerminals) {
+                parsedString += terminal + " ";
+            }
+            System.out.println("The error occurred after having parsed " + parsedString);
         }
     }
 

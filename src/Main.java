@@ -1,20 +1,17 @@
 import controller.Grammar;
 import controller.Parser;
-import domain.ParsingTable;
-
-import java.util.ArrayList;
-import java.util.Stack;
 
 public class Main {
     public static void main(String[] args) {
-        Grammar grammar = new Grammar("g1.txt");
-        //System.out.println(grammar.getNonTerminals());
-        Parser parser = new Parser(grammar);
+        Grammar g2 = new Grammar("g2.txt");
+        Parser p2 = new Parser(g2);
+        p2.parse("PIF.out", "out2.txt");
 
-//        for (String key: parser.firstList.keySet()) {
-//            System.out.println(key);
-//            System.out.println(parser.firstList.get(key));
-//        }
-        parser.parse("input1.txt", "out1.txt");
+        System.out.println();
+        System.out.println();
+
+        Grammar g1 = new Grammar("g1.txt");
+        Parser p1 = new Parser(g1);
+        p1.parse("seq.txt", "out1.txt");
     }
 }

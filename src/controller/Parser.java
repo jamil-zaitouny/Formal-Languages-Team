@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Parser {
     public HashMap<String, ArrayList<String>> firstList;
@@ -16,8 +15,8 @@ public class Parser {
 
     public Parser(Grammar grammar) {
         this.grammar = grammar;
-        this.firstList = firstFlatten();
-        this.followList = followFlatten();
+        this.buildFirst();
+        this.buildFollow();
     }
 
     public Grammar getGrammar() {
@@ -53,101 +52,122 @@ public class Parser {
         }
     }
 
-    public HashMap<String, ArrayList<String>> first() {
-        ArrayList<Production> productions = grammar.productions;
-        HashMap<String, ArrayList<String>> first = new HashMap<>();
-        for(Production production: productions){
-            first.put(production.leftHandSide, new ArrayList<>());
+    private static HashMap<String, ArrayList<String>> deepCopyHashMap(HashMap<String, ArrayList<String>> hashMap) {
+        HashMap<String, ArrayList<String>> newHashMap = new HashMap<>();
+        for (String key: hashMap.keySet()) {
+            newHashMap.put(key, new ArrayList<>());
+            for (String string: hashMap.get(key)) {
+                newHashMap.get(key).add(string);
+            }
         }
-        for (Production production : productions) {
-            first.get(production.leftHandSide).add(production.rightHandSide[0]);
-        }
-        return first;
+        return newHashMap;
     }
 
-    public HashMap<String, ArrayList<String>> firstFlatten() {
-        AtomicBoolean isFlat = new AtomicBoolean(false);
-        HashMap<String, ArrayList<String>> first = first();
-        Set<String> listOfKeys = new HashSet<>(first.keySet());
-        int counter = 0;
-        do{
-            for(String key: listOfKeys){
-                int size = first.get(key).size();
-                for(int i = 0; i < size; i++){
-                    isFlat.set(true);
-                    if(grammar.isNonTerminal(first.get(key).get(i))){
-                        isFlat.set(false);
-                        ArrayList<String> terminals = first.get(first.get(key).get(i));
-                        first.get(key).addAll(terminals);
-                        first.get(key).remove(first.get(key).get(i));
-                    }
-                }
-            }
-        }while(!isFlat.get());
-        return first;
+    private static int hashMapSize(HashMap<String, ArrayList<String>> hashMap) {
+        int size = 0;
+        for (String key: hashMap.keySet()) {
+            size += hashMap.get(key).size();
+        }
+        return size;
     }
-    public HashMap<String, ArrayList<String>> follow() {
-        ArrayList<Production> productions = grammar.productions;
-        HashMap<String, ArrayList<String>> follow = new HashMap<>();
-        HashMap<String, ArrayList<String>> first = firstFlatten();
-        productions.forEach(production -> follow.put(production.leftHandSide, new ArrayList<>()));
-        for(Production production: productions){
-            for(int i = 0; i <  production.rightHandSide.length; i++){
-                if(grammar.isNonTerminal(production.rightHandSide[i])){
-                    if(i == production.rightHandSide.length-1){
-                        follow.get(production.rightHandSide[i]).add(production.leftHandSide);
-                    }else{
-                        int currentCounter = 1 + i;
-                        String currentNext = production.rightHandSide[currentCounter];
-                        while(currentCounter < production.rightHandSide.length){
-                            if(!grammar.isNonTerminal(production.rightHandSide[currentCounter])){
-                                follow.get(production.rightHandSide[i]).add(production.rightHandSide[currentCounter]);
-                                break;
-                            }
-                            if(currentCounter == production.rightHandSide.length -1){
-                                follow.get(production.rightHandSide[i]).addAll(first.get(production.rightHandSide[currentCounter]));
-                                break;
-                            }
-                            ArrayList<String> firstOfCurrentFollow = first.get(production.rightHandSide[currentCounter]);
-                            follow.get(production.rightHandSide[i]).addAll(firstOfCurrentFollow);
-                            if(!firstOfCurrentFollow.contains("é")){
-                                break;
-                            }
-                            currentCounter++;
+
+    private void buildFirst() {
+        HashMap<String, ArrayList<String>> nonTerminalsForFirst = new HashMap<>();
+        firstList = new HashMap<>();
+        for (String nonTerminal: grammar.getNonTerminals()) {
+            firstList.put(nonTerminal, new ArrayList<>());
+            nonTerminalsForFirst.put(nonTerminal, new ArrayList<>());
+        }
+        for (Production production: grammar.productions) {
+            String token = production.rightHandSide[0];
+            if (grammar.isNonTerminal(token)) {
+                nonTerminalsForFirst.get(production.leftHandSide).add(token);
+            }
+            else {
+                firstList.get(production.leftHandSide).add(token);
+            }
+        }
+        HashMap<String, ArrayList<String>> firstListOld = new HashMap<>();
+        while (hashMapSize(firstListOld) != hashMapSize(firstList)) {
+            firstListOld = deepCopyHashMap(firstList);
+            for (String nonTerminal: grammar.getNonTerminals()) {
+                for (String firstNonTerminal: nonTerminalsForFirst.get(nonTerminal)) {
+                    ArrayList<String> toAddList = firstList.get(firstNonTerminal);
+                    for (String toAdd: toAddList) {
+                        if (!firstList.get(nonTerminal).contains(toAdd)) {
+                            firstList.get(nonTerminal).add(toAdd);
                         }
                     }
                 }
             }
         }
-        follow.get("S").add("é");
-        HashMap<String, ArrayList<String>> finalFollow = new HashMap<>();
-        for(Map.Entry<String, ArrayList<String>> entry: follow.entrySet()){
-            finalFollow.put(entry.getKey(), new ArrayList<>(new HashSet<>(entry.getValue())));
-        }
-        return finalFollow;
     }
 
-    public HashMap<String, ArrayList<String>> followFlatten() {
-        HashMap<String, ArrayList<String>> follow = follow();
-        boolean isFlat = false;
-        do{
-            isFlat = true;
-            for(String key: follow.keySet()){
-                int size = follow.get(key).size();
-                for(int i = 0; i < size; i++){
-                   if(grammar.isNonTerminal(follow.get(key).get(i))){
-                       isFlat = false;
-                       String tokenToReplaceWith = follow.get(key).get(i);
-                       follow.get(key).remove(tokenToReplaceWith);
-                       follow.get(key).addAll(follow.get(tokenToReplaceWith));
-                   }
+    private void buildFollow() {
+        followList = new HashMap<>();
+        HashMap<String, ArrayList<String>> followListOld = new HashMap<>();
+        for (String nonTerminal: grammar.getNonTerminals()) {
+            followList.put(nonTerminal, new ArrayList<>());
+        }
+        followList.get("S").add("é");
+        for (Production production: grammar.productions) {
+            String[] rightHandSide = production.rightHandSide;
+            for (int i=0; i<rightHandSide.length - 1; i++) {
+                String nonTerminal = rightHandSide[i];
+                String nextToken = rightHandSide[i + 1];
+                if (grammar.isNonTerminal(nonTerminal)) {
+                    if (grammar.isNonTerminal(nextToken)) {
+                        for (String first: firstList.get(nextToken)) {
+                            if (!first.equals("é") && !followList.get(nonTerminal).contains(first)) {
+                                followList.get(nonTerminal).add(first);
+                            }
+                        }
+                    }
+                    else {
+                        if (!followList.get(nonTerminal).contains(nextToken)) {
+                            followList.get(nonTerminal).add(nextToken);
+                        }
+                    }
                 }
             }
-        }while(!isFlat);
-        HashMap<String, ArrayList<String>> finalFollow = new HashMap<>();
-        for(Map.Entry<String, ArrayList<String>> entry: follow.entrySet()){
-            finalFollow.put(entry.getKey(), new ArrayList<>(new HashSet<>(entry.getValue())));
         }
-        return finalFollow;
+        while (hashMapSize(followListOld) != hashMapSize(followList)) {
+            followListOld = deepCopyHashMap(followList);
+            for (Production production: grammar.productions) {
+                String[] rightHandSide = production.rightHandSide;
+                String leftHandSide = production.leftHandSide;
+                String nonTerminal = rightHandSide[rightHandSide.length - 1];
+                if (grammar.isNonTerminal(nonTerminal)) {
+                    for (String follow: followList.get(leftHandSide)) {
+                        if (!followList.get(nonTerminal).contains(follow)) {
+                            followList.get(nonTerminal).add(follow);
+                        }
+                    }
+                }
+            }
+            for (Production production: grammar.productions) {
+                String[] rightHandSide = production.rightHandSide;
+                String leftHandSide = production.leftHandSide;
+                int rightHandSideIndex = rightHandSide.length - 1;
+                while(rightHandSideIndex >= 0 && grammar.isNonTerminal(rightHandSide[rightHandSideIndex]) && firstList.get(rightHandSide[rightHandSideIndex]).contains("é")) {
+                    rightHandSideIndex --;
+                }
+                rightHandSideIndex ++;
+                if (rightHandSideIndex < rightHandSide.length && rightHandSideIndex > 0) {
+                    String nonTerminalNext = rightHandSide[rightHandSideIndex];
+                    String nonTerminal = rightHandSide[rightHandSideIndex - 1];
+                    for (String first: firstList.get(nonTerminalNext)) {
+                        if (!first.equals("é") && !followList.get(nonTerminal).contains(first)) {
+                            followList.get(nonTerminal).add(first);
+                        }
+                    }
+                    for (String follow: followList.get(leftHandSide)) {
+                        if (!followList.get(nonTerminal).contains(follow)) {
+                            followList.get(nonTerminal).add(follow);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

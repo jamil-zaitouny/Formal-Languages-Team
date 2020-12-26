@@ -130,9 +130,5 @@ public class Grammar {
 
     public Grammar(String fileName) {
         this.readGrammarFromFile(fileName);
-//        printSetOfTerminals();
-//        printSetOfNonTerminals();
-//        printSetOfProductions();
-//        printSetOfProductionsNonTerminal("T");
     }
 }
